@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Poppins";
+      }
+      body {
+        background-color: #131e23;
+        display: flex;
+        justify-content: center;
+        width: 100vw;
+        height: 100vh;
+      }
+      .content {
+        display: flex;
+        width: 90%;
+        flex-direction: column;
+        justify-content: space-around;
+      }
+      textarea:first-child {
+        padding: 20px;
+      }
+      textarea {
+        resize: none;
+        border: none;
+        padding: 8px;
+        background-color: #3c3d46;
+        color: white;
+        outline: none;
+        font-size: 1.3rem;
+        text-align: justify;
+        border-radius: 5px;
+      }
+      textarea:focus {
+        border: 1px solid #8257e5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="content">
+      <textarea
+        id="result"
+        placeholder="Resposta da IA"
+        style="height: 75%"
+        rows="10"
+        disabled
+      ></textarea>
+      <textarea
+        id="inputQuestion"
+        placeholder="Pergunte Algo.."
+        style="height: 15%"
+      ></textarea>
+    </div>
+
+    <script>
+      const inputQuestion = document.getElementById("inputQuestion");
+      const result = document.getElementById("result");
+
+      inputQuestion.addEventListener("keypress", (e) => {
+        if (inputQuestion.value && e.key === "Enter") SendQuestion();
+      });
+
+      const OPENAI_API_KEY =
+        "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";
+
+      function SendQuestion() {
+        var sQuestion = inputQuestion.value;
+
+        fetch("https://api.openai.com/v1/completions", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + OPENAI_API_KEY,
+          },
+          body: JSON.stringify({
+            model: "text-davinci-003",
+            prompt: sQuestion,
+            max_tokens: 3072, // tamanho da resposta
+            temperature: 1, // criatividade na resposta
+          }),
+        })
+          .then((response) => response.json())
+          .then((json) => {
+            if (result.value) result.value += "\n";
+
+            if (json.error?.message) {
+              result.value += `Error: ${json.error.message}`;
+            } else if (json.choices?.[0].text) {
+              var text = json.choices[0].text || "Sem resposta";
+
+              result.value += "\n" + "RESPOSTA ENCONTRADA" + text;
+            }
+
+            result.scrollTop = result.scrollHeight;
+          })
+          .catch((error) => console.error("Error:", error))
+          .finally(() => {
+            inputQuestion.value = "";
+            inputQuestion.disabled = false;
+            inputQuestion.focus();
+          });
+
+        if (result.value) result.value += "\n\n\n";
+
+        result.value += `Pergunta: ${sQuestion}`;
+        inputQuestion.value = "Carregando...";
+        inputQuestion.disabled = true;
+
+        result.scrollTop = result.scrollHeight;
+      }
+    </script>
+  </body>
+</html>
